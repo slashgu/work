@@ -1,0 +1,385 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<style>
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote {
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: "Helvetica Neue", Helvetica, "Hiragino Sans GB", Arial, sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    color: #737373;
+    background-color: white;
+    margin: 10px 13px 10px 13px;
+}
+table {
+	margin: 10px 0 15px 0;
+	border-collapse: collapse;
+}
+td,th {	
+	border: 1px solid #ddd;
+	padding: 3px 10px;
+}
+th {
+	padding: 5px 10px;	
+}
+
+a {
+    color: #0069d6;
+}
+a:hover {
+    color: #0050a3;
+    text-decoration: none;
+}
+a img {
+    border: none;
+}
+p {
+    margin-bottom: 9px;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: #404040;
+    line-height: 36px;
+}
+h1 {
+    margin-bottom: 18px;
+    font-size: 30px;
+}
+h2 {
+    font-size: 24px;
+}
+h3 {
+    font-size: 18px;
+}
+h4 {
+    font-size: 16px;
+}
+h5 {
+    font-size: 14px;
+}
+h6 {
+    font-size: 13px;
+}
+hr {
+    margin: 0 0 19px;
+    border: 0;
+    border-bottom: 1px solid #ccc;
+}
+blockquote {
+    padding: 13px 13px 21px 15px;
+    margin-bottom: 18px;
+    font-family:georgia,serif;
+    font-style: italic;
+}
+blockquote:before {
+    content:"\201C";
+    font-size:40px;
+    margin-left:-10px;
+    font-family:georgia,serif;
+    color:#eee;
+}
+blockquote p {
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 18px;
+    margin-bottom: 0;
+    font-style: italic;
+}
+code, pre {
+    font-family: Monaco, Andale Mono, Courier New, monospace;
+}
+code {
+    background-color: #fee9cc;
+    color: rgba(0, 0, 0, 0.75);
+    padding: 1px 3px;
+    font-size: 12px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+pre {
+    display: block;
+    padding: 14px;
+    margin: 0 0 18px;
+    line-height: 16px;
+    font-size: 11px;
+    border: 1px solid #d9d9d9;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+pre code {
+    background-color: #fff;
+    color:#737373;
+    font-size: 11px;
+    padding: 0;
+}
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
+}
+* {
+	-webkit-print-color-adjust: exact;
+}
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:10px auto;
+    }
+}
+@media print {
+	body,code,pre code,h1,h2,h3,h4,h5,h6 {
+		color: black;
+	}
+	table, pre {
+		page-break-inside: avoid;
+	}
+}
+</style>
+<title>Readme</title>
+
+</head>
+<body>
+<h1>Readme</h1>
+
+<p>to understand how logsummary parse the debug file and generate HTML or CVS file, we have to first understand <a href="#fsm">Finite State Machine</a>, which we use as a framework for this parsing task, and then we are able to <a href="#lsw">write the log file</a> depending on the states of Finite State Machine. Following, I will show two examples of <a href="#eg">how to get more information from debug files</a>.</p>
+
+<h2><span id="fsm">Finite State Machine</span></h2>
+
+<p>The Finite State Machine we defined is a class initialized with a starting state: <code>fsm = FiniteStateMachine(state_normal)</code>, and each state has several possible next states to transit to, as well as corresponding functions to be called, which <a href="#howto">I will describe in detail later</a>.</p>
+
+<pre><code>if 'on_match_go_to_state' in match:
+    self.state = match['on_match_go_to_state']
+
+if 'on_match_functions' in match:
+    for function in match['on_match_functions']:
+        function(line_data)
+</code></pre>
+
+<p>In where, <strong>match</strong> is a <strong>LineMatch</strong> object that explains how to take an arbitrary string and if it matches a regular expression, <em>pull out specific data from the regular expression</em> and <em>put it into a dictionary</em>. The concept of <strong>match</strong> is the key of understanding how this program works, and it might be a little confused at first glance, so here's an example:</p>
+
+<p>We design a regular expression</p>
+
+<pre><code>re_api_call_start = re.compile(
+  '^(.{26}).+ S[Yy][Mm][\w]{0,5} (Sym[A-Za-z0-9]+|taskRun|taskSetup|emc[A-Za-z]+)\s+([Ff]unction [Ee]nter|@\(#\)|[Ea-z\s]+ \(task NDM.*\))(.*)')
+</code></pre>
+
+<p>and a <strong>LineMatch</strong> object</p>
+
+<pre><code>line_match_api_call_start = LineMatch
+    (re_api_call_start, {'date': 1, 'api_call': [None,  2, 4],'contents': 'api_call_start'})
+</code></pre>
+
+<p>which means that if we run into the following line in a debug file</p>
+
+<pre><code>10/21/2015 14:26:52.210814   3937      1           EMC Corp                     SYMDM taskSetup                         Entered function (task NDM:DARYL_       NDM_SG) SIDs 000194901137 n/p, flags TRANSIENT,QUERY_ONLY
+</code></pre>
+
+<p><code>re_api_call_start</code> would capture 4 matched groups, which are</p>
+
+<ol>
+<li>10/21/2015 14:26:52.210814</li>
+<li>taskSetup</li>
+<li>Entered function (task NDM:DARYL_ NDM_SG)</li>
+<li>SIDs 000194901137 n/p, flags TRANSIENT,QUERY_ONLY</li>
+</ol>
+
+
+<p>and the <em>specific data we want to put into a dictionary</em> is indicated by the <strong>LineMatch</strong> object <strong>line_match_api_call_start</strong>, which is the <strong>line_data</strong></p>
+
+<table>
+<thead>
+<tr>
+<th align="center"> Key          </th>
+<th align="center"> Value                     </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"> 'date'       </td>
+<td align="center"> 10/21/2015 14:26:52.210814</td>
+</tr>
+<tr>
+<td align="center"> 'api_call'   </td>
+<td align="center"> taskSetup SIDs 000194901137 n/p, flags TRANSIENT,QUERY_ONLY </td>
+</tr>
+<tr>
+<td align="center">'contents'    </td>
+<td align="center"> 'api_call_start'          </td>
+</tr>
+</tbody>
+</table>
+
+
+<p>In the future, we will write all the <strong>line_data</strong> into log file, as <a href="#write_line">we can see later</a>.</p>
+
+<h3><span id="howto">Add state transition and corresponding functions</span></h3>
+
+<p>Since we have initialized the Finite State Machine with the <code>state_normal</code>, you must be curious about how we transit from state to state, we do that through the <code>add_transition</code> method of Class <strong>State</strong> as follows</p>
+
+<pre><code>state_api_call_start.add_transition(
+  {'line_match': line_match_api_call_start, 'on_match_go_to_state': state_api_call_start,
+   'on_match_functions': [LogSummary.set_line_number, FiniteStateMachine.write_line]})
+</code></pre>
+
+<p>which simply means that if we are at state <code>state_api_call_start</code>, and the next string matches with <strong>match['line_match']</strong> (i.e. line_match_api_call_start), the Finite State Machine would transite to <strong>match['on_match_go_to_state']</strong> (i.e. state_api_call_start), and then run all of the functions in <strong>match['on_match_functions']</strong> (i.e. first LogSummary.set_line_number(), then FiniteStateMachine.write_line()). By far, the Finite State Machine has been set up.</p>
+
+<h2><span id="lsw">Log Summary Writer</span></h2>
+
+<p>Once we make the Finite State Machine running as expected, we can generate the summary log files using Class <strong>LogSummaryWriter</strong>.<br/>
+Still use the example above, because <strong>line_data['contents']</strong> is 'api_call_start'</p>
+
+<pre><code>if line_data['contents'] == 'api_call_start':
+  if LogSummary.line_cache == []:
+    LogSummary.line_cache.append(copy.deepcopy(line_data))
+
+  else:
+    LogSummary.line_cache.reverse()
+    for line_data_tmp in LogSummary.line_cache:
+      sys.stdout.write('"%s","%s Starts %s","","","","","","%d"\n' % (
+        line_data_tmp['date'], line_data_tmp['api_call'], line_data_tmp['api_call_info'],
+        line_data_tmp['line_no']))
+    LogSummary.line_cache = [copy.deepcopy(line_data)]
+
+  return
+</code></pre>
+
+<p>This code of Class <strong>LogSummaryWriter</strong> simply means that if there is other <strong>line_data</strong> in <strong>LogSummary.line_cache</strong>, first write them in the log file reversly, and then put the holding <strong>line_data</strong> into <strong>LogSummary.line_cache</strong>. This is how we write the captured information of one state into the log file, and <a href="#eg">I will describe how we write additional information later</a>, as an example in case that the readers want to add other useful information later.</p>
+
+<h3><span id="eg">Write Additional Information Examples</span></h3>
+
+<p>As an illustration, I will demonstrate how I extract <a href="#task_terminate">taskTerminate</a> api call information first, and then the <a href="#task_ndm">task NDM</a>.</p>
+
+<h4><span id="task_terminate">taskTerminate</span></h4>
+
+<p>First, we would like to design a regular expression that can capture the taskTerminate from the debug file</p>
+
+<pre><code>re_task_terminate = re.compile('^(.{26}).+ (taskTerminate)\s+(.*)')
+</code></pre>
+
+<p>which would give us three matched groups when it run into the corresponding line in debug file</p>
+
+<ol>
+<li>10/21/2015 14:26:56.210392</li>
+<li>taskTerminate</li>
+<li>Task has terminated (task NDM:DAR YL_NDM_SG)</li>
+</ol>
+
+
+<p>And then design the <strong>LineMatch</strong> object</p>
+
+<pre><code>line_match_task_terminate = LineMatch(re_task_terminate,
+                                      {'date': 1, 'api_call': 3, 'contents': 'task_terminate'})
+</code></pre>
+
+<p>which would give us the <strong>line_data</strong> as follows</p>
+
+<table>
+<thead>
+<tr>
+<th align="center"> Key          </th>
+<th align="center"> Value                     </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"> 'date'       </td>
+<td align="center"> 10/21/2015 14:26:56.210392</td>
+</tr>
+<tr>
+<td align="center"> 'api_call'   </td>
+<td align="center"> Task has terminated (task NDM:DAR YL_NDM_SG) </td>
+</tr>
+<tr>
+<td align="center">'contents'    </td>
+<td align="center"> 'task_terminate'          </td>
+</tr>
+</tbody>
+</table>
+
+
+<p>And then the last step would be involving the state into the Finite State Machine according to some transition rules, in this case, it would stand still at state <code>state_normal</code>, so no need to create a new state. However, we still need the method <code>add_transition</code> to tell us what functions need to be called in this case.</p>
+
+<pre><code>state_normal.add_transition(
+  {'line_match': line_match_task_terminate, 'on_match_go_to_state': state_normal,
+   'on_match_functions': [FiniteStateMachine.write_line]})
+</code></pre>
+
+<p>From where, we can tell that if the Finite State Machine is at state <code>state_normal</code>, and the next string matches with <strong>line_match_task_terminate</strong>, it will stay at <code>state_normal</code>, and write the corresponding <strong>line_data</strong> into log file.</p>
+
+<h4><span id="task_ndm">task NDM</span></h4>
+
+<p>Unlike the last example, since the task NDM and its corresponding nugget calls are also api call, we would like to design new regular expression, but modify the existing regular expression of api call would be more considerable.</p>
+
+<pre><code>re_api_call_start = re.compile(
+  '^(.{26}).+ S[Yy][Mm][\w]{0,5} (Sym[A-Za-z0-9]+|taskRun|taskSetup|emc[A-Za-z]+)\s+([Ff]unction [Ee]nter|@\(#\)|[Ea-z\s]+ \(task NDM.*\))(.*)')
+</code></pre>
+
+<p>And the <strong>LineMatch</strong> object</p>
+
+<pre><code>line_match_api_call_start = LineMatch(re_api_call_start,
+                                      {'date': 1, 'api_call': [None, 2, 4], 'contents': 'api_call_start'})
+</code></pre>
+
+<p>which would give us the <strong>line_data</strong> as follows</p>
+
+<table>
+<thead>
+<tr>
+<th align="center"> Key          </th>
+<th align="center"> Value                     </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"> 'date'       </td>
+<td align="center"> 10/21/2015 14:26:52.210814</td>
+</tr>
+<tr>
+<td align="center"> 'api_call'   </td>
+<td align="center"> taskSetup SIDs 000194901137 n/p, flags TRANSIENT,QUERY_ONLY </td>
+</tr>
+<tr>
+<td align="center">'contents'    </td>
+<td align="center"> 'api_call_start'          </td>
+</tr>
+</tbody>
+</table>
+
+
+<p>Involving this into the Finite State Machine would be the same as <a href="#howto">mentioned before</a>.</p>
+
+<p>The last step before we are done with this task is to modify the method <span id="write_line"><strong>write_line</strong></span> of class <strong>LogSummaryWriter</strong>. It because that we want to get the information when entering a function (action, flags etc.), so we need to get them from <strong>LogSummary.line_cache</strong> when they exists.</p>
+
+<pre><code>temp = LogSummary.line_cache[-1]
+temp = temp['api_call'].split(' ')
+temp.pop(0)
+
+sys.stdout.write('&lt;tr&gt;&lt;td&gt;%s&lt;/td&gt;&lt;td colspan="6"&gt;%s&amp;nbsp%s&amp;nbsp%s&lt;/td&gt;&lt;td&gt;%d&lt;/td&gt;&lt;/tr&gt;\n' % (
+                  line_data['date'], line_data['api_call'], "[Entering with "+' '.join(temp)+"]", " Starts/Ends", line_data['line_no']))
+LogSummary.line_cache.pop()
+</code></pre>
+
+<p>in where, the <code>temp</code> in first line is the <strong>line_data</strong> containing the information of entering a function.</p>
+
+<h2>Conclusion</h2>
+
+<p>Because this Python script was written in the idiom of C programming, rather than OOP scheme, it is kind of hard to refactor it, thus I figured it out it might be a little help of writing a readme file. It is a very smart way of warpping the whole parsing procedure as a Finite State Machine, even though it is a little bit convoluted and not easy for people to read, for which reason, that I hope this readme file would be helpful of getting people understand and extent it in the future. And of course, please let me know if there is anything wrong in the file, just email me: <a href="&#x6d;&#97;&#x69;&#x6c;&#116;&#x6f;&#58;&#x63;&#x68;&#101;&#x6e;&#103;&#46;&#103;&#117;&#64;&#101;&#109;&#x63;&#x2e;&#99;&#x6f;&#x6d;">&#x63;&#104;&#x65;&#110;&#x67;&#x2e;&#103;&#117;&#64;&#101;&#x6d;&#x63;&#x2e;&#99;&#x6f;&#109;</a></p>
+</body>
+</html>
