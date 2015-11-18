@@ -140,5 +140,16 @@ The last step before we are done with this task is to modify the method [**write
     
 in where, the `temp` in first line is the **line_data** containing the information of entering a function.
 
+## Extention for Python 3
+In case that there is someone who want to use python 3, here is the solutions.
+
+First we use the shebang notation, which can release us from typing the interpretor name every time we want to run the script, which is as follows:
+
+	#!/usr/bin/env/python3
+	
+the path after `#!` is the location of python 3 interpretor.
+
+Further more, due to the PEP 0008, Python 3 disallows mixing the use of tabs and spaces for indentation, so please use spaces as the indentation method when extending this script. 
+
 ## Conclusion
-Because this Python script was written in the idiom of C programming, rather than OOP scheme, it is kind of hard to refactor it, thus I figured it out it might be a little help of writing a readme file. It is a very smart way of warpping the whole parsing procedure as a Finite State Machine, even though it is a little bit convoluted and not easy for people to read, for which reason, that I hope this readme file would be helpful of getting people understand and extent it in the future. And of course, please let me know if there is anything wrong in the file, just email me: <cheng.gu@emc.com>
+It is a very smart way of warpping the whole parsing procedure as a Finite State Machine, even though it is a little bit convoluted and not easy for people to read, for which reason, that I hope this readme file would be helpful of getting people understand and extent it in the future. And of course, please let me know if there is anything wrong in the file, just email me: <cheng.gu@emc.com>
