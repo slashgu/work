@@ -11,7 +11,7 @@ The Finite State Machine we defined is a class initialized with a starting state
     	for function in match['on_match_functions']:
         	function(line_data)
 
-In where, **match** is a **LineMatch** object that explains how to take an arbitrary string and if it matches a regular expression, *pull out specific data from the regular expression* and *put it into a dictionary*. The concept of **match** is the key of understanding how this program works, and it might be a little confused at first glance, so here's an example:
+Where, **match** is a **LineMatch** object that explains how to take an arbitrary string and if it matches a regular expression, *pull out specific data from the regular expression* and *put it into a dictionary*. The concept of **match** is the key of understanding how this program works, and it might be a little confused at first glance, so here's an example:
 
 We design a regular expression
 
@@ -128,7 +128,7 @@ which would give us the **line_data** as follows
 
 Involving this into the Finite State Machine would be the same as [mentioned before](#howto).  
 
-The last step before we are done with this task is to modify the method [**write_line**](id:write_line) of class **LogSummaryWriter**. It because that we want to get the information when entering a function (action, flags etc.), so we need to get them from **LogSummary.line_cache** when they exists.
+The last step before we are done with this task is to modify the method [**write_line**](id:write_line) of class **LogSummaryWriter**. It is because that we want to get the information when entering a function (action, flags etc.), so we need to get them from **LogSummary.line_cache** when they exists, rather than puting them in cache.
 
 	temp = LogSummary.line_cache[-1]
     temp = temp['api_call'].split(' ')
@@ -152,4 +152,4 @@ the path after `#!` is the location of python 3 interpretor.
 Further more, due to the PEP 0008, Python 3 disallows mixing the use of tabs and spaces for indentation, so please use spaces as the indentation method when extending this script. 
 
 ## Conclusion
-It is a very smart way of warpping the whole parsing procedure as a Finite State Machine, even though it is a little bit convoluted and not easy for people to read, for which reason, that I hope this readme file would be helpful of getting people understand and extent it in the future. And of course, please let me know if there is anything wrong in the file, just email me: <cheng.gu@emc.com>
+It is a very smart way of warpping the whole parsing procedure as a Finite State Machine, even though it is a little bit convoluted and not easy for people to read, for which reason, that I hope this readme file would be helpful of getting people understand and extent it in the future.
