@@ -172,7 +172,7 @@ if 'on_match_functions' in match:
         function(line_data)
 </code></pre>
 
-<p>In where, <strong>match</strong> is a <strong>LineMatch</strong> object that explains how to take an arbitrary string and if it matches a regular expression, <em>pull out specific data from the regular expression</em> and <em>put it into a dictionary</em>. The concept of <strong>match</strong> is the key of understanding how this program works, and it might be a little confused at first glance, so here's an example:</p>
+<p>Where, <strong>match</strong> is a <strong>LineMatch</strong> object that explains how to take an arbitrary string and if it matches a regular expression, <em>pull out specific data from the regular expression</em> and <em>put it into a dictionary</em>. The concept of <strong>match</strong> is the key of understanding how this program works, and it might be a little confused at first glance, so here's an example:</p>
 
 <p>We design a regular expression</p>
 
@@ -365,7 +365,7 @@ Still use the example above, because <strong>line_data['contents']</strong> is '
 
 <p>Involving this into the Finite State Machine would be the same as <a href="#howto">mentioned before</a>.</p>
 
-<p>The last step before we are done with this task is to modify the method <span id="write_line"><strong>write_line</strong></span> of class <strong>LogSummaryWriter</strong>. It because that we want to get the information when entering a function (action, flags etc.), so we need to get them from <strong>LogSummary.line_cache</strong> when they exists.</p>
+<p>The last step before we are done with this task is to modify the method <span id="write_line"><strong>write_line</strong></span> of class <strong>LogSummaryWriter</strong>. It is because that we want to get the information when entering a function (action, flags etc.), so we need to get them from <strong>LogSummary.line_cache</strong> when they exists, rather than puting them in cache.</p>
 
 <pre><code>temp = LogSummary.line_cache[-1]
 temp = temp['api_call'].split(' ')
@@ -378,8 +378,21 @@ LogSummary.line_cache.pop()
 
 <p>in where, the <code>temp</code> in first line is the <strong>line_data</strong> containing the information of entering a function.</p>
 
+<h2>Extention for Python 3</h2>
+
+<p>In case that there is someone who want to use python 3, here is the solutions.</p>
+
+<p>First we use the shebang notation, which can release us from typing the interpretor name every time we want to run the script, which is as follows:</p>
+
+<pre><code>#!/usr/bin/env/python3
+</code></pre>
+
+<p>the path after <code>#!</code> is the location of python 3 interpretor.</p>
+
+<p>Further more, due to the PEP 0008, Python 3 disallows mixing the use of tabs and spaces for indentation, so please use spaces as the indentation method when extending this script.</p>
+
 <h2>Conclusion</h2>
 
-<p>Because this Python script was written in the idiom of C programming, rather than OOP scheme, it is kind of hard to refactor it, thus I figured it out it might be a little help of writing a readme file. It is a very smart way of warpping the whole parsing procedure as a Finite State Machine, even though it is a little bit convoluted and not easy for people to read, for which reason, that I hope this readme file would be helpful of getting people understand and extent it in the future. And of course, please let me know if there is anything wrong in the file, just email me: <a href="&#x6d;&#97;&#x69;&#x6c;&#116;&#x6f;&#58;&#x63;&#x68;&#101;&#x6e;&#103;&#46;&#103;&#117;&#64;&#101;&#109;&#x63;&#x2e;&#99;&#x6f;&#x6d;">&#x63;&#104;&#x65;&#110;&#x67;&#x2e;&#103;&#117;&#64;&#101;&#x6d;&#x63;&#x2e;&#99;&#x6f;&#109;</a></p>
+<p>It is a very smart way of warpping the whole parsing procedure as a Finite State Machine, even though it is a little bit convoluted and not easy for people to read, for which reason, that I hope this readme file would be helpful of getting people understand and extent it in the future.</p>
 </body>
 </html>
